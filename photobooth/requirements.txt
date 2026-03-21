@@ -3,6 +3,6 @@ uvicorn[standard]
 websockets
 pillow
 mediapipe
-opencv-python
+opencv-python-headless
 python-multipart
 numpy
