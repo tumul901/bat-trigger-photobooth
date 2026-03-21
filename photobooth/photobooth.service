@@ -1,0 +1,15 @@
+[Unit]
+Description=Bat Trigger Photobooth - FastAPI Backend
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/bat-trigger-photobooth/backend
+Environment="PATH=/var/www/bat-trigger-photobooth/backend/venv/bin"
+ExecStart=/var/www/bat-trigger-photobooth/backend/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8000 --proxy-headers
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
