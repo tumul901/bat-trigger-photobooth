@@ -33,8 +33,8 @@ pending_ball_data = None
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 BALL_TEMPLATE = Image.open(os.path.join(ASSETS_DIR, "ball.png"))
 
-# Serve static assets
-app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+# Serve static assets (renamed to avoid collision with React's /assets folder)
+app.mount("/backend-assets", StaticFiles(directory=ASSETS_DIR), name="backend-assets")
 
 class ConnectionManager:
     def __init__(self):
@@ -125,7 +125,7 @@ async def debug_swing():
     global pending_ball_data
     print("DEBUG: Manual swing triggered via API!")
     
-    image_url = pending_ball_data if pending_ball_data else "/assets/ball.png"
+    image_url = pending_ball_data if pending_ball_data else "/backend-assets/ball.png"
     
     # For photo balls, we MUST keep rotation at 0 so the face is vertical.
     # For default balls, a random rotation looks more natural.
@@ -155,7 +155,7 @@ async def swing():
     global pending_ball_data
     print("DEBUG: SWING detected via Browser API!")
     
-    image_url = pending_ball_data if pending_ball_data else "/assets/ball.png"
+    image_url = pending_ball_data if pending_ball_data else "/backend-assets/ball.png"
     
     # Ensure photo balls stay upright
     is_photo = image_url.startswith("data:image")
@@ -209,7 +209,7 @@ async def handle_trigger(reader, writer):
                     print("DEBUG: SWING_DETECTED! Pushing to wall...")
                     
                     # If we have a custom ball, use it. Otherwise fallback to default.
-                    image_url = pending_ball_data if pending_ball_data else "/assets/ball.png"
+                    image_url = pending_ball_data if pending_ball_data else "/backend-assets/ball.png"
                     
                     # Ensure photo balls stay upright
                     is_photo = image_url.startswith("data:image")

@@ -5,9 +5,9 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/bat-trigger-photobooth/backend
-Environment="PATH=/var/www/bat-trigger-photobooth/backend/venv/bin"
-ExecStart=/var/www/bat-trigger-photobooth/backend/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8000 --proxy-headers
+WorkingDirectory=/var/www/bat-trigger-photobooth/photobooth
+Environment="PATH=/var/www/bat-trigger-photobooth/photobooth/venv/bin"
+ExecStart=/var/www/bat-trigger-photobooth/photobooth/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8000 --proxy-headers
 Restart=always
 RestartSec=5
 
