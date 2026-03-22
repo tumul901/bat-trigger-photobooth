@@ -3,9 +3,6 @@ services:
     build: .
     container_name: photobooth
     ports:
-      - "80:80"
-      - "443:443"
-      - "9999:9999"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - "127.0.0.1:8090:80"
+      - "0.0.0.0:9999:9999"
     restart: always
