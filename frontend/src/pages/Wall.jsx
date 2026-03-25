@@ -43,12 +43,12 @@ const Wall = () => {
         ))}
       </div>
  
-      {/* Header */}
-      <div className="absolute top-8 w-full text-center pointer-events-none">
-        <h1 className="text-white text-4xl font-black italic uppercase tracking-tighter drop-shadow-2xl opacity-90">
+      {/* Header - Moved to Top Right */}
+      <div className="absolute top-8 right-12 text-right pointer-events-none select-none z-50">
+        <h1 className="text-white text-5xl font-black italic uppercase tracking-tighter drop-shadow-2xl opacity-90">
           Batting <span className="text-red-600">Legend</span>
         </h1>
-        <p className="text-white/60 text-sm font-medium uppercase tracking-[0.5em] mt-1 drop-shadow-lg">
+        <p className="text-white/60 text-xs font-medium uppercase tracking-[0.4em] mt-1 drop-shadow-lg">
           Official Photobooth
         </p>
       </div>
