@@ -59,9 +59,9 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-async def run_compositing(file_data: bytes):
+def run_compositing_sync(file_data: bytes):
     """
-    Background task to process the photo.
+    Synchronous version of compositing to run in a threadpool.
     """
     global pending_ball_data
     try:
@@ -98,10 +98,10 @@ async def run_compositing(file_data: bytes):
         print(f"  TOTAL TIME:        {round(t4-t0, 3)}s")
         print(f"---------------------------")
         
-        # Notify clients (tablet) that the ball is ready
-        await manager.broadcast({"type": "compositing_done"})
+        return True
     except Exception as e:
         print(f"ERROR: Compositing failed: {e}")
+        return False
 
 @app.get("/health")
 async def health():
@@ -112,9 +112,27 @@ async def capture(image: UploadFile = File(...)):
     """
     Received image from tablet station.
     """
+    print(f"DEBUG: /api/capture request received! Filename: {image.filename}")
     data = await image.read()
-    # Execute compositing in background so we can return 200 OK immediately
-    asyncio.create_task(run_compositing(data))
+    print(f"DEBUG: Image data read complete. Size: {len(data)} bytes")
+    
+    # Use run_in_executor to avoid blocking the main event loop
+    loop = asyncio.get_event_loop()
+    
+    def background_task():
+        print("DEBUG: Starting background compositing task...")
+        if run_compositing_sync(data):
+            print("DEBUG: Compositing success, broadcasting...")
+            # After sync work is done, broadcast the notification on the main loop
+            asyncio.run_coroutine_threadsafe(
+                manager.broadcast({"type": "compositing_done"}), 
+                loop
+            )
+        else:
+            print("DEBUG: Compositing FAILED in background task")
+            
+    loop.run_in_executor(None, background_task)
+    
     return {"status": "ok", "message": "Processing started"}
 
 @app.get("/api/debug/swing")
@@ -139,7 +157,7 @@ async def debug_swing():
             "imageUrl": image_url,
             "x": 15 + (time.time() * 73) % 70, 
             "y": 20 + (time.time() * 91) % 45,
-            "finalScale": 0.18 + (time.time() % 0.08), 
+                            "finalScale": 0.35, 
             "rotation": ball_rotation
         }
     })
@@ -168,7 +186,7 @@ async def swing():
             "imageUrl": image_url,
             "x": 15 + (time.time() * 73) % 70, 
             "y": 20 + (time.time() * 91) % 45,
-            "finalScale": 0.18 + (time.time() % 0.08), 
+            "finalScale": 0.35, 
             "rotation": ball_rotation
         }
     })
@@ -223,7 +241,7 @@ async def handle_trigger(reader, writer):
                             "imageUrl": image_url,
                             "x": 15 + (time.time() * 73) % 70, 
                             "y": 20 + (time.time() * 91) % 45, # Keep lower for safe zone
-                            "finalScale": 0.18 + (time.time() % 0.08), 
+                            "finalScale": 0.35, 
                             "rotation": ball_rotation
                         }
                     })
@@ -249,4 +267,4 @@ async def startup_event():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

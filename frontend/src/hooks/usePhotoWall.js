@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 
-const VITE_WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8000`;
+const VITE_WS_URL = import.meta.env.VITE_WS_URL || `ws://127.0.0.1:8080`;
 
 // Sitting size formula:
-// - 1 to 5 balls  → 1.4x  (large & prominent without inflating the GSAP pop)
-// - 6 to 15 balls → shrinks gradually by 0.09 per ball
-// - floors at 0.5x (always visible)
+// - We keep balls at a steady, large size (1.3x) 
+// - Instead of shrinking, we rely on removing older balls (MAX_BALLS)
 const getMultiplier = (count) => {
-  if (count <= 5) return 1.4;
-  return Math.max(0.5, 1.4 - ((count - 5) * 0.09));
+  return 1.3; 
 };
 
 // Max balls allowed on wall before the oldest is removed

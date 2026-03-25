@@ -88,7 +88,7 @@ export class SwingDetector {
         if (this.isRecovering) {
             if (velocity < this.resetVelocity) {
                 this.isRecovering = false;
-                console.log("DEBUG: Swing detector reset complete");
+                console.log("DEBUG: Swing detector reset complete (velocity normalized)");
             }
             return false;
         }
@@ -98,10 +98,16 @@ export class SwingDetector {
         const isAccelerating = acceleration > this.minAcceleration;
         const hasDisplacement = displacement > this.minDisplacement;
         
-        // Horizontal arc preference
+        // Horizontal arc preference: change in X must be at least 0.5x the change in Y
         const isHorizontal = Math.abs(direction.dx) > Math.abs(direction.dy) * 0.5;
 
+        // Log reasons if we are moving enough to be interesting (>50% of threshold)
+        if (velocity > this.minVelocity * 0.5 || displacement > this.minDisplacement * 0.5) {
+            console.log(`DEBUG: Detector Trace - Vel: ${velocity.toFixed(1)}/Min:${this.minVelocity}, Accel: ${acceleration.toFixed(1)}/Min:${this.minAcceleration}, Disp: ${displacement.toFixed(1)}/Min:${this.minDisplacement}, Horiz: ${isHorizontal}`);
+        }
+
         if ((isFast || isAccelerating) && hasDisplacement && isHorizontal) {
+            console.log("%cDEBUG: SWING TRIGGERED!", "color: #ff0000; font-weight: bold; size: 20px;");
             this.lastSwingTime = now;
             this.isRecovering = true;
             return true;

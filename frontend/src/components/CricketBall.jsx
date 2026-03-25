@@ -81,7 +81,8 @@ const CricketBall = ({ ball, onRemove }) => {
   }, [ball.removing]);
  
   const baseSize = ball.finalScale || 0.2;
-  const frozenScale = `scale(calc(${baseSize} * ${ball.birthMultiplier ?? 1}))`;
+  const multiplier = ball.birthMultiplier ?? 1;
+  const frozenScale = `scale(calc(${baseSize} * ${multiplier}))`;
  
   return (
     // outerRef: GSAP fades this out on removal — completely separate from ballRef

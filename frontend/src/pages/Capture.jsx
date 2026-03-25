@@ -9,7 +9,7 @@ import {
 } from "@mediapipe/tasks-vision";
 import { MotionAnalyzer, SwingDetector } from '../utils/SwingDetection';
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+const VITE_API_URL = import.meta.env.VITE_API_URL || `http://127.0.0.1:8080`;
 
 const Capture = () => {
     const [state, setState] = useState('idle'); // idle | preview | uploading | ready | done
@@ -17,6 +17,8 @@ const Capture = () => {
     const [capturedImage, setCapturedImage] = useState(null);
     const [isDetectorReady, setIsDetectorReady] = useState(false);
     const [isCompositingDone, setIsCompositingDone] = useState(false);
+    const [debugFeatures, setDebugFeatures] = useState(null);
+    const [showDebug, setShowDebug] = useState(true); // Default to true for tuning
     
     // Refs for detection
     const videoRef = useRef(null);
@@ -133,11 +135,13 @@ const Capture = () => {
         formData.append('image', blob, 'capture.jpg');
 
         try {
-            await fetch(`${VITE_API_URL}/api/capture`, {
+            console.log(`DEBUG: Uploading to ${VITE_API_URL}/api/capture`);
+            const response = await fetch(`${VITE_API_URL}/api/capture`, {
                 method: 'POST',
                 body: formData
             });
-            console.log("DEBUG: Photo uploaded successfully");
+            const data = await response.json();
+            console.log("DEBUG: Photo uploaded successfully", data);
         } catch (err) {
             console.error("DEBUG: Upload failed:", err);
         }
@@ -188,6 +192,15 @@ const Capture = () => {
                     // Update Motion Analyzer (using right wrist as primary, or whichever is available)
                     analyzerRef.current.update(wristPoints);
                     const features = analyzerRef.current.getMotionFeatures('right') || analyzerRef.current.getMotionFeatures('left');
+                    
+                    if (features) {
+                        setDebugFeatures({
+                            velocity: features.velocity,
+                            acceleration: features.acceleration,
+                            displacement: features.displacement,
+                            isHorizontal: Math.abs(features.direction.dx) > Math.abs(features.direction.dy) * 0.5
+                        });
+                    }
 
                     if (detectorRef.current.detectSwing(features)) {
                         console.log("DEBUG: Swing detected in browser!");
@@ -379,6 +392,43 @@ const Capture = () => {
                         >
                             Reset / Back to Camera
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- DEBUG OVERLAY --- */}
+            {showDebug && debugFeatures && (
+                <div className="absolute top-4 left-4 z-[100] bg-black/80 backdrop-blur-sm p-4 rounded-xl border border-white/20 font-mono text-[10px] space-y-1 pointer-events-none">
+                    <div className="text-red-500 font-bold mb-2 flex justify-between items-center">
+                        <span>DETECTOR METRICS</span>
+                        <span className="text-[8px] animate-pulse">LIVE</span>
+                    </div>
+                    <div className="flex justify-between w-40">
+                        <span>Velocity:</span>
+                        <span className={debugFeatures.velocity > 30 ? "text-green-400 font-bold" : ""}>
+                            {debugFeatures.velocity.toFixed(1)}
+                        </span>
+                    </div>
+                    <div className="flex justify-between w-40">
+                        <span>Accel:</span>
+                        <span className={debugFeatures.acceleration > 20 ? "text-green-400 font-bold" : ""}>
+                            {debugFeatures.acceleration.toFixed(1)}
+                        </span>
+                    </div>
+                    <div className="flex justify-between w-40">
+                        <span>Displace:</span>
+                        <span className={debugFeatures.displacement > 150 ? "text-green-400 font-bold" : ""}>
+                            {debugFeatures.displacement.toFixed(1)}
+                        </span>
+                    </div>
+                    <div className="flex justify-between w-40 border-t border-white/10 mt-1 pt-1">
+                        <span>Horizontal:</span>
+                        <span className={debugFeatures.isHorizontal ? "text-green-400" : "text-red-400"}>
+                            {debugFeatures.isHorizontal ? "YES" : "NO"}
+                        </span>
+                    </div>
+                    <div className="mt-2 text-[8px] opacity-40 italic">
+                        Thresholds: V{">"}30, A{">"}20, D{">"}150
                     </div>
                 </div>
             )}
