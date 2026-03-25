@@ -18,7 +18,7 @@ const CricketBall = ({ ball }) => {
         zIndex: 1000 // Ensure it's on top during highlight
       },
       { 
-        scale: 0.8, // Big highlight size
+        scale: 0.8, // Original highlight size
         opacity: 1, 
         y: 0, 
         duration: 1.2, 
@@ -71,7 +71,7 @@ const CricketBall = ({ ball }) => {
       style={{
         left: `${ball.x}%`,
         top: `${ball.y}%`,
-        width: '400px', // Increased base size
+        width: 'clamp(400px, 20vw, 800px)', // Surgical sizing: 400px on laptop, grows on 4K
         transform: `translate(-50%, -50%) rotate(${ball.rotation}deg)`,
       }}
     >
