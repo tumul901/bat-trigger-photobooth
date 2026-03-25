@@ -13,8 +13,8 @@ ENV/
 
 # Large Files & OS
 *.png
-!frontend/src/assets/
-!frontend/public/assets/
+!frontend/src/assets/*.png
+!frontend/public/assets/*.png
 !photobooth/assets/ball.png
 !photobooth/assets/stadium-bg.png
 .DS_Store
