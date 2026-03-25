@@ -8,25 +8,24 @@ const CricketBall = ({ ball, onRemove }) => {
   const outerRef = useRef(null);
  
   useGSAP(() => {
-    if (!ballRef.current) return;
+    if (!ballRef.current || !outerRef.current) return;
  
     const tl = gsap.timeline();
  
-    // Step 1: Entrance pop — medium and smooth
+    // Step 1: Entrance pop at center — quick and impactful
     tl.fromTo(ballRef.current,
-      { scale: 0.01, opacity: 0, y: -200 },
+      { scale: 0.01, opacity: 0 },
       {
         scale: 4.0,
         opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "bounce.out",
+        duration: 0.8,
+        ease: "back.out(1.7)",
         onComplete: () => {
           const rect = ballRef.current?.getBoundingClientRect();
           if (!rect) return;
           confetti({
-            particleCount: 40,
-            spread: 60,
+            particleCount: 50,
+            spread: 70,
             origin: {
               x: (rect.left + rect.width / 2) / window.innerWidth,
               y: (rect.top + rect.height / 2) / window.innerHeight
@@ -39,22 +38,30 @@ const CricketBall = ({ ball, onRemove }) => {
     );
  
     // Step 2: Settle back to wall size (scale 1.0 = CSS layer handles actual size)
+    if (!outerRef.current) return;
+
+    // Step 2: Move to final position and settle back to wall size
+    tl.to(outerRef.current, {
+      left: `${ball.x}%`,
+      top: `${ball.y}%`,
+      duration: 1.2,
+      ease: "power3.inOut",
+    }, "+=0.3"); // short pause at center
+
     tl.to(ballRef.current, {
       scale: 1.0,
-      duration: 1.5,
-      delay: 2.0,
-      ease: "power2.inOut",
-    });
+      duration: 1.2,
+      ease: "power3.inOut",
+    }, "<"); // sync with the move
  
     // Step 3: Idle float — forever
-    gsap.to(ballRef.current, {
+    tl.to(ballRef.current, {
       y: "+=12",
       rotation: "+=10",
       duration: 3 + Math.random() * 2,
       repeat: -1,
       yoyo: true,
       ease: "sine.inOut",
-      delay: 4.0
     });
  
   }, []); // Empty deps: GSAP runs once, never interrupted
@@ -82,8 +89,8 @@ const CricketBall = ({ ball, onRemove }) => {
       ref={outerRef}
       className="absolute select-none pointer-events-none"
       style={{
-        left: `${ball.x}%`,
-        top: `${ball.y}%`,
+        left: '50%',
+        top: '50%',
         width: 'clamp(400px, 20vw, 800px)',
         transform: 'translate(-50%, -50%)',
         zIndex: 1,
