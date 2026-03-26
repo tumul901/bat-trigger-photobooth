@@ -60,11 +60,11 @@ export class MotionAnalyzer {
 
 export class SwingDetector {
     constructor(options = {}) {
-        this.minVelocity = options.minVelocity || 30;
-        this.minAcceleration = options.minAcceleration || 20;
-        this.minDisplacement = options.minDisplacement || 150;
-        this.debounceTime = options.debounceTime || 5000; // 5 seconds
-        this.resetVelocity = options.resetVelocity || 10;
+        this.minVelocity = options.minVelocity || 60;         // was 30 — needs a proper swing speed now
+        this.minAcceleration = options.minAcceleration || 40;   // was 20 — filters gradual arm raises
+        this.minDisplacement = options.minDisplacement || 250;  // was 150 — requires meaningful arc travel
+        this.debounceTime = options.debounceTime || 5000;       // unchanged: 5 s cooldown
+        this.resetVelocity = options.resetVelocity || 15;       // was 10 — must slow down more before re-arming
         
         this.lastSwingTime = 0;
         this.isRecovering = false;
@@ -99,7 +99,8 @@ export class SwingDetector {
         const hasDisplacement = displacement > this.minDisplacement;
         
         // Horizontal arc preference: change in X must be at least 0.5x the change in Y
-        const isHorizontal = Math.abs(direction.dx) > Math.abs(direction.dy) * 0.5;
+        // Horizontal arc: dx must be >= dy (was 0.5x — too lenient for dynamic environments)
+        const isHorizontal = Math.abs(direction.dx) > Math.abs(direction.dy) * 1.0;
 
         // Log reasons if we are moving enough to be interesting (>50% of threshold)
         if (velocity > this.minVelocity * 0.5 || displacement > this.minDisplacement * 0.5) {

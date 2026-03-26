@@ -23,11 +23,12 @@ const Capture = () => {
     // Refs for detection
     const videoRef = useRef(null);
     const landmarkerRef = useRef(null);
-    const analyzerRef = useRef(new MotionAnalyzer(15));
+    const analyzerRef = useRef(new MotionAnalyzer(30)); // Increased for longer trail
     const detectorRef = useRef(new SwingDetector({ debounceTime: 5000 }));
     const requestRef = useRef(null);
     const swingPendingRef = useRef(false);
     const isDetectingRef = useRef(false);
+    const trailCanvasRef = useRef(null);
     const wsRef = useRef(null);
     const crowdAudio = useRef(new Audio('/sounds/crowd.mp3'));
     const hitAudio = useRef(new Audio('/sounds/hit.mp3'));
@@ -205,6 +206,11 @@ const Capture = () => {
                     if (detectorRef.current.detectSwing(features)) {
                         console.log("DEBUG: Swing detected in browser!");
                         
+                        // Capture path for trail overlay
+                        if (features.path && trailCanvasRef.current) {
+                            animateTrail(features.path);
+                        }
+
                         if (state === 'uploading') {
                             console.log("DEBUG: Swing queued (compositing still in progress)");
                             swingPendingRef.current = true;
@@ -213,9 +219,13 @@ const Capture = () => {
                             hitAudio.current.currentTime = 0;
                             hitAudio.current.play().catch(e => console.warn("Audio play blocked", e));
 
-                            // 2. Kill detection loop immediately (before state change propagation)
+                            // 2. Kill detection loop immediately
                             isDetectingRef.current = false;
-                            setState('done');
+                            
+                            // Delay state change slightly so the trail is seen on LIVE video first
+                            setTimeout(() => {
+                                setState('done');
+                            }, 500);
                             
                             // 3. Trigger server
                             try {
@@ -264,6 +274,75 @@ const Capture = () => {
         }
     }, [state]);
 
+    // --- TRAIL ANIMATION HELPER ---
+    const animateTrail = (points) => {
+        const canvas = trailCanvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+
+        let opacity = 1.0;
+        const fadeStep = 0.02; // Fade speed
+
+        const drawFrame = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (opacity <= 0) return;
+
+            ctx.globalAlpha = opacity;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Convert points to canvas space and MIRROR X to match mirrored video
+            const canvasPoints = points.map(p => ({
+                x: canvas.width - (p.x / 1000) * canvas.width,
+                y: (p.y / 1000) * canvas.height
+            }));
+
+            // 1. Outer Glow (Thick)
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+            ctx.strokeStyle = 'rgba(255, 50, 50, 0.3)';
+            ctx.lineWidth = 15;
+            drawPath(ctx, canvasPoints);
+
+            // 2. Inner Neon (Medium)
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 6;
+            drawPath(ctx, canvasPoints);
+
+            // 3. Core (Thin)
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            drawPath(ctx, canvasPoints);
+
+            // Draw current tip
+            const lastPoint = canvasPoints[canvasPoints.length - 1];
+            ctx.beginPath();
+            ctx.arc(lastPoint.x, lastPoint.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            opacity -= fadeStep;
+            requestAnimationFrame(drawFrame);
+        };
+
+        const drawPath = (c, pts) => {
+            if (pts.length < 2) return;
+            c.beginPath();
+            c.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                c.lineTo(pts[i].x, pts[i].y);
+            }
+            c.stroke();
+        };
+
+        drawFrame();
+    };
+
     useGSAP(() => {
         if (state === 'ready') {
             gsap.fromTo(".ready-icon", 
@@ -289,6 +368,12 @@ const Capture = () => {
                     (state === 'idle' || state === 'ready') ? 'opacity-100' : 
                     (state === 'uploading') ? 'opacity-20 grayscale' : 'opacity-0'
                 }`}
+            />
+
+            {/* --- SWING TRAIL CANVAS (Above all overlays) --- */}
+            <canvas
+                ref={trailCanvasRef}
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[100]"
             />
 
             {/* --- IDLE STATE: Capture UI --- */}
