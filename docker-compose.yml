@@ -5,6 +5,4 @@ services:
     ports:
       - "127.0.0.1:8090:80"
       - "0.0.0.0:9999:9999"
-    volumes:
-      - ./frontend/dist:/var/www/html
     restart: always
