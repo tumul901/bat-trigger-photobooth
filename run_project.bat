@@ -19,7 +19,7 @@ echo 🚀 Launching servers in separate windows...
 echo.
 
 :: 3. Start the Backend (FastAPI)
-start "🏏 Photobooth Backend (8000)" cmd /k "cd photobooth && python -m uvicorn server:app --host 0.0.0.0 --port 8000 --reload"
+start "🏏 Photobooth Backend (8080)" cmd /k "cd photobooth && python -m uvicorn server:app --host 0.0.0.0 --port 8080 --reload"
 
 :: 4. Start the Frontend (Vite)
 :: Note: --host 0.0.0.0 is needed for tablet access

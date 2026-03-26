@@ -157,7 +157,7 @@ async def debug_swing():
             "imageUrl": image_url,
             "x": 15 + (time.time() * 73) % 70, 
             "y": 20 + (time.time() * 91) % 45,
-                            "finalScale": 0.35, 
+            "finalScale": 0.37, 
             "rotation": ball_rotation
         }
     })
@@ -186,7 +186,7 @@ async def swing():
             "imageUrl": image_url,
             "x": 15 + (time.time() * 73) % 70, 
             "y": 20 + (time.time() * 91) % 45,
-            "finalScale": 0.35, 
+            "finalScale": 0.37, 
             "rotation": ball_rotation
         }
     })
@@ -241,7 +241,7 @@ async def handle_trigger(reader, writer):
                             "imageUrl": image_url,
                             "x": 15 + (time.time() * 73) % 70, 
                             "y": 20 + (time.time() * 91) % 45, # Keep lower for safe zone
-                            "finalScale": 0.35, 
+                            "finalScale": 0.37, 
                             "rotation": ball_rotation
                         }
                     })
